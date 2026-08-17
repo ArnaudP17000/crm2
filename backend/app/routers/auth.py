@@ -22,6 +22,12 @@ class TotpVerifyIn(BaseModel):
 class TotpCodeIn(BaseModel):
     code: str
 
+class UpdateMeIn(BaseModel):
+    nom: Optional[str] = None
+    email: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
 @router.post('/login')
 def login(body: LoginIn, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == body.email).first()
@@ -88,3 +94,23 @@ def totp_disable(body: TotpCodeIn, db: Session = Depends(get_db), user: User = D
 def me(user: User = Depends(get_current_user)):
     return {'id': user.id, 'email': user.email, 'nom': user.nom,
             'role': user.role, 'totp_enabled': user.totp_enabled}
+
+@router.patch('/me')
+def update_me(body: UpdateMeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if body.new_password:
+        if not body.current_password:
+            raise HTTPException(400, 'Mot de passe actuel requis')
+        if not verify_password(body.current_password, user.password_hash):
+            raise HTTPException(401, 'Mot de passe actuel incorrect')
+        if len(body.new_password) < 8:
+            raise HTTPException(400, 'Le mot de passe doit faire au moins 8 caractères')
+        user.password_hash = hash_password(body.new_password)
+    if body.nom is not None:
+        user.nom = body.nom
+    if body.email is not None:
+        existing = db.query(User).filter(User.email == body.email, User.id != user.id).first()
+        if existing:
+            raise HTTPException(409, 'Cet email est déjà utilisé')
+        user.email = body.email
+    db.commit()
+    return {'ok': True, 'email': user.email, 'nom': user.nom}

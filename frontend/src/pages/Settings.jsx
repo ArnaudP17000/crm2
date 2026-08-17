@@ -1,19 +1,53 @@
 import { useEffect, useState } from 'react'
-import { ShieldCheck, ShieldOff, KeyRound, CheckCircle } from 'lucide-react'
+import { ShieldCheck, ShieldOff, KeyRound, CheckCircle, Pencil, Save, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
 export default function Settings() {
-  const [me, setMe]           = useState(null)
-  const [qr, setQr]           = useState(null)
-  const [secret, setSecret]   = useState('')
-  const [code, setCode]       = useState('')
-  const [step, setStep]       = useState('idle') // idle | setup | confirm | disable
-  const [loading, setLoading] = useState(false)
+  const [me, setMe]               = useState(null)
+  const [qr, setQr]               = useState(null)
+  const [secret, setSecret]       = useState('')
+  const [code, setCode]           = useState('')
+  const [step, setStep]           = useState('idle') // idle | setup | confirm | disable
+  const [loading, setLoading]     = useState(false)
+  const [editing, setEditing]     = useState(false)
+  const [form, setForm]           = useState({ nom: '', email: '', current_password: '', new_password: '', confirm_password: '' })
+  const [saving, setSaving]       = useState(false)
 
   useEffect(() => {
-    api.get('/auth/me').then(r => setMe(r.data)).catch(() => {})
+    api.get('/auth/me').then(r => {
+      setMe(r.data)
+      setForm(f => ({ ...f, nom: r.data.nom || '', email: r.data.email || '' }))
+    }).catch(() => {})
   }, [])
+
+  function startEdit() {
+    setForm(f => ({ ...f, nom: me.nom || '', email: me.email || '', current_password: '', new_password: '', confirm_password: '' }))
+    setEditing(true)
+  }
+
+  async function saveProfile() {
+    if (form.new_password && form.new_password !== form.confirm_password) {
+      toast.error('Les mots de passe ne correspondent pas')
+      return
+    }
+    setSaving(true)
+    try {
+      const payload = { nom: form.nom, email: form.email }
+      if (form.new_password) {
+        payload.current_password = form.current_password
+        payload.new_password = form.new_password
+      }
+      const { data } = await api.patch('/auth/me', payload)
+      setMe(m => ({ ...m, nom: data.nom, email: data.email }))
+      setEditing(false)
+      toast.success('Profil mis à jour')
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Erreur')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function startSetup() {
     setLoading(true)
@@ -138,14 +172,65 @@ export default function Settings() {
 
       {/* Infos compte */}
       <div className="bg-white rounded-xl border border-gray-100 p-5 mt-4">
-        <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <KeyRound size={17} className="text-gray-400"/> Compte
-        </h2>
-        <div className="text-sm text-gray-600 space-y-1">
-          <p><span className="text-gray-400">Email :</span> {me.email}</p>
-          <p><span className="text-gray-400">Nom :</span> {me.nom || '—'}</p>
-          <p><span className="text-gray-400">Rôle :</span> {me.role}</p>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2">
+            <KeyRound size={17} className="text-gray-400"/> Compte
+          </h2>
+          {!editing && (
+            <button onClick={startEdit}
+              className="flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-500 transition-colors">
+              <Pencil size={14}/> Modifier
+            </button>
+          )}
         </div>
+
+        {!editing ? (
+          <div className="text-sm text-gray-600 space-y-1.5">
+            <p><span className="text-gray-400">Email :</span> {me.email}</p>
+            <p><span className="text-gray-400">Nom :</span> {me.nom || '—'}</p>
+            <p><span className="text-gray-400">Rôle :</span> {me.role}</p>
+            <p><span className="text-gray-400">Mot de passe :</span> <span className="tracking-widest">••••••••</span></p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Nom</label>
+              <input type="text" value={form.nom}
+                onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Email</label>
+              <input type="email" value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-xs text-gray-400 mb-2">Changer le mot de passe (laisser vide pour ne pas modifier)</p>
+              <div className="space-y-2">
+                <input type="password" placeholder="Mot de passe actuel" value={form.current_password}
+                  onChange={e => setForm(f => ({ ...f, current_password: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                <input type="password" placeholder="Nouveau mot de passe (8 car. min)" value={form.new_password}
+                  onChange={e => setForm(f => ({ ...f, new_password: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                <input type="password" placeholder="Confirmer le nouveau mot de passe" value={form.confirm_password}
+                  onChange={e => setForm(f => ({ ...f, confirm_password: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={saveProfile} disabled={saving}
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50">
+                <Save size={14}/> {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+              <button onClick={() => setEditing(false)}
+                className="flex items-center gap-1.5 border border-gray-200 text-gray-500 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                <X size={14}/> Annuler
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
