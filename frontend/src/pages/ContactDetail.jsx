@@ -22,6 +22,12 @@ export default function ContactDetail() {
   }
   useEffect(load, [id])
 
+  async function changeStatut(s) {
+    const r = await api.patch(`/contacts/${id}/statut`, { statut: s })
+    setContact(r.data)
+    toast.success('Statut mis à jour')
+  }
+
   const addActivity = async e => {
     e.preventDefault()
     await api.post(`/contacts/${id}/activities`, form)
@@ -51,12 +57,31 @@ export default function ContactDetail() {
           <div className="col-span-1 space-y-4">
             <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
               <h1 className="font-bold text-gray-900 text-lg mb-1">{contact.nom}</h1>
-              <div className="flex flex-wrap gap-1 mb-1">
+              <div className="flex flex-wrap gap-1 mb-3">
                 {contact.type && <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{contact.type}</span>}
                 {contact.siren
                   ? <span className="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full flex items-center gap-1"><ShieldCheck size={10}/> SIREN {contact.siren}</span>
                   : <span className="text-xs bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-full">SIREN manquant</span>
                 }
+              </div>
+              {/* Statut rapide */}
+              <div className="border-t border-gray-100 pt-3">
+                <p className="text-xs text-gray-400 mb-2">Statut</p>
+                <div className="flex gap-1 flex-wrap">
+                  {[
+                    { value: 'prospect', label: 'Prospect', cls: 'bg-blue-100 text-blue-700 ring-blue-300' },
+                    { value: 'qualifie', label: 'Qualifié', cls: 'bg-amber-100 text-amber-700 ring-amber-300' },
+                    { value: 'client',   label: 'Client',   cls: 'bg-green-100 text-green-700 ring-green-300' },
+                    { value: 'inactif',  label: 'Inactif',  cls: 'bg-gray-100 text-gray-500 ring-gray-300' },
+                  ].map(s => (
+                    <button key={s.value} onClick={() => changeStatut(s.value)}
+                      className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${s.cls} ${
+                        contact.statut === s.value ? 'ring-2' : 'opacity-40 hover:opacity-80'
+                      }`}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="mt-4 space-y-2 text-sm text-gray-600">
                 {contact.email && <a href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-emerald-600"><Mail size={14}/>{contact.email}</a>}

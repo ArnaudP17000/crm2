@@ -1,31 +1,40 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Plus, Phone, Mail, MapPin, Filter } from 'lucide-react'
+import { Search, Plus, Phone, Mail, MapPin } from 'lucide-react'
 import api from '../api'
 
-const TYPE_COLORS = {
-  'École de surf':   'bg-emerald-100 text-emerald-700',
-  'École Kitesurf':  'bg-blue-100 text-blue-700',
-  'Surf Shop':       'bg-purple-100 text-purple-700',
-  'École & Shop':    'bg-teal-100 text-teal-700',
-  default:           'bg-gray-100 text-gray-600',
+const STATUT_STYLES = {
+  client:   'bg-green-100 text-green-700',
+  prospect: 'bg-blue-100 text-blue-700',
+  qualifie: 'bg-amber-100 text-amber-700',
+  inactif:  'bg-gray-100 text-gray-500',
 }
+const STATUT_LABELS = { client: 'Client', prospect: 'Prospect', qualifie: 'Qualifié', inactif: 'Inactif' }
 
 export default function Contacts() {
   const [contacts, setContacts] = useState([])
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [search, setSearch]     = useState('')
+  const [statut, setStatut]     = useState('')
+  const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
-    api.get('/contacts', { params: { search, type: filter } })
+    setLoading(true)
+    api.get('/contacts', { params: { search: search || undefined, statut: statut || undefined } })
       .then(r => setContacts(r.data))
       .finally(() => setLoading(false))
-  }, [search, filter])
+  }, [search, statut])
+
+  const tabs = [
+    { value: '',         label: 'Tous' },
+    { value: 'client',   label: 'Clients' },
+    { value: 'prospect', label: 'Prospects' },
+    { value: 'qualifie', label: 'Qualifiés' },
+    { value: 'inactif',  label: 'Inactifs' },
+  ]
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <h1 className="text-xl font-bold text-gray-900">
           Contacts <span className="text-gray-400 font-normal text-base ml-1">({contacts.length})</span>
         </h1>
@@ -35,22 +44,24 @@ export default function Contacts() {
         </Link>
       </div>
 
-      {/* Filtres */}
-      <div className="flex gap-3 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher..."
-            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-        </div>
-        <select value={filter} onChange={e => setFilter(e.target.value)}
-          className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-600">
-          <option value="">Tous les types</option>
-          <option>École de surf</option>
-          <option>École Kitesurf</option>
-          <option>Surf Shop</option>
-          <option>École & Shop</option>
-        </select>
+      {/* Onglets statut */}
+      <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-lg w-fit">
+        {tabs.map(t => (
+          <button key={t.value} onClick={() => setStatut(t.value)}
+            className={`text-sm px-4 py-1.5 rounded-md font-medium transition-colors ${
+              statut === t.value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Recherche */}
+      <div className="relative mb-4 max-w-sm">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher..."
+          className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
       </div>
 
       {/* Liste */}
@@ -83,7 +94,7 @@ export default function Contacts() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[c.type] || TYPE_COLORS.default}`}>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                       {c.type || '—'}
                     </span>
                   </td>
@@ -108,12 +119,9 @@ export default function Contacts() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      c.statut === 'client'    ? 'bg-green-100 text-green-700' :
-                      c.statut === 'prospect'  ? 'bg-blue-100 text-blue-700' :
-                      c.statut === 'inactif'   ? 'bg-gray-100 text-gray-500' :
-                      'bg-gray-100 text-gray-500'
-                    }`}>{c.statut || 'prospect'}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUT_STYLES[c.statut] || 'bg-gray-100 text-gray-500'}`}>
+                      {STATUT_LABELS[c.statut] || c.statut || 'prospect'}
+                    </span>
                   </td>
                 </tr>
               ))}

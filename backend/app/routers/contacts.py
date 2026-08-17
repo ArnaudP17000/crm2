@@ -48,6 +48,7 @@ def contact_dict(c):
 def list_contacts(
     search: Optional[str] = Query(None),
     type: Optional[str] = Query(None),
+    statut: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     _=Depends(get_current_user)
 ):
@@ -60,7 +61,17 @@ def list_contacts(
         ))
     if type:
         q = q.filter(Contact.type == type)
+    if statut:
+        q = q.filter(Contact.statut == statut)
     return [contact_dict(c) for c in q.order_by(Contact.nom).all()]
+
+@router.patch('/{id}/statut')
+def update_statut(id: int, body: dict, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    c = db.get(Contact, id)
+    if not c: raise HTTPException(404)
+    c.statut = body.get('statut', c.statut)
+    db.commit()
+    return contact_dict(c)
 
 @router.post('')
 def create_contact(body: ContactIn, db: Session = Depends(get_db), _=Depends(get_current_user)):
