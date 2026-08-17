@@ -146,6 +146,23 @@ class Payment(Base):
 
     invoice = relationship('Invoice', back_populates='payments')
 
+class CompanySettings(Base):
+    __tablename__ = 'company_settings'
+    id          = Column(Integer, primary_key=True)
+    nom         = Column(String(200), default='')
+    siren       = Column(String(14),  default='')
+    siret       = Column(String(17),  default='')
+    tva_number  = Column(String(20),  default='')
+    adresse     = Column(Text,        default='')
+    code_postal = Column(String(10),  default='')
+    ville       = Column(String(100), default='')
+    telephone   = Column(String(50),  default='')
+    email       = Column(String(200), default='')
+    site_web    = Column(String(300), default='')
+    iban        = Column(String(34),  default='')
+    bic         = Column(String(11),  default='')
+    mentions    = Column(Text,        default='')
+
 class User(Base):
     __tablename__ = 'users'
     id            = Column(Integer, primary_key=True)
