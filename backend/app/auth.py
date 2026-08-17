@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -12,14 +12,16 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'change-me-in-production')
 ALGORITHM  = 'HS256'
 EXPIRE_DAYS = 30
 
-pwd_ctx  = CryptContext(schemes=['bcrypt'])
-bearer   = HTTPBearer()
+bearer = HTTPBearer()
 
 def hash_password(pwd: str) -> str:
-    return pwd_ctx.hash(pwd)
+    return bcrypt.hashpw(pwd.encode(), bcrypt.gensalt(rounds=12)).decode()
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_ctx.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(plain.encode(), hashed.encode())
+    except Exception:
+        return False
 
 def create_token(user_id: int) -> str:
     exp = datetime.utcnow() + timedelta(days=EXPIRE_DAYS)
