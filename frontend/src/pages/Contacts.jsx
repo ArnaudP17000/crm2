@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Search, Plus, Phone, Mail, MapPin } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Search, Plus, Phone, Mail, MapPin, ExternalLink } from 'lucide-react'
 import api from '../api'
 
 const STATUT_STYLES = {
@@ -16,6 +16,7 @@ export default function Contacts() {
   const [search, setSearch]     = useState('')
   const [statut, setStatut]     = useState('')
   const [loading, setLoading]   = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     setLoading(true)
@@ -81,15 +82,15 @@ export default function Contacts() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {contacts.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={c.id} onClick={() => navigate(`/contacts/${c.id}`)}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer">
                   <td className="px-4 py-3">
-                    <Link to={`/contacts/${c.id}`} className="font-medium text-gray-900 hover:text-emerald-600">
-                      {c.nom}
-                    </Link>
+                    <span className="font-medium text-gray-900">{c.nom}</span>
                     {c.site_web && (
                       <a href={c.site_web} target="_blank" rel="noopener"
-                        className="block text-xs text-gray-400 hover:text-emerald-500 truncate max-w-[200px]">
-                        {c.site_web.replace(/^https?:\/\//, '')}
+                        onClick={e => e.stopPropagation()}
+                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-emerald-500 mt-0.5 w-fit">
+                        <ExternalLink size={10}/> {c.site_web.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                       </a>
                     )}
                   </td>
@@ -104,7 +105,7 @@ export default function Contacts() {
                       {c.ville || c.region || '—'}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <div className="space-y-0.5">
                       {c.email && (
                         <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-gray-500 hover:text-emerald-600">
