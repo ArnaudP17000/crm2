@@ -97,6 +97,30 @@ def get_quote(id: int, db: Session = Depends(get_db), _=Depends(get_current_user
     if not q: raise HTTPException(404)
     return quote_dict(q, with_lines=True)
 
+@router.put('/{id}')
+def update_quote(id: int, body: QuoteIn, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    q = db.get(Quote, id)
+    if not q: raise HTTPException(404)
+    q.contact_id    = body.contact_id
+    q.validity_date = datetime.fromisoformat(body.validity_date) if body.validity_date else None
+    q.notes         = body.notes
+    # Remplace les lignes
+    for line in q.lines:
+        db.delete(line)
+    db.flush()
+    total_ht, total_ttc = _compute_totals(body.lines)
+    q.total_ht  = total_ht
+    q.total_ttc = total_ttc
+    for l in body.lines:
+        db.add(QuoteLine(
+            quote_id=q.id, description=l.description,
+            quantity=l.quantity, unit_price=l.unit_price,
+            vat_rate=l.vat_rate,
+            total=round(l.quantity * l.unit_price * (1 + l.vat_rate / 100), 2),
+        ))
+    db.commit(); db.refresh(q)
+    return quote_dict(q, with_lines=True)
+
 @router.patch('/{id}/status')
 def update_status(id: int, body: dict, db: Session = Depends(get_db), _=Depends(get_current_user)):
     q = db.get(Quote, id)
