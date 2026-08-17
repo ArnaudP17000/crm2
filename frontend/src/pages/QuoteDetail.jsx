@@ -235,7 +235,7 @@ export default function QuoteDetail() {
                 <XCircle size={14}/> Refusé
               </button>
             </>)}
-            {quote.status === 'accepte' && (
+            {['brouillon', 'envoye', 'accepte'].includes(quote.status) && (
               <button onClick={convertToInvoice}
                 className="flex items-center gap-1.5 text-sm bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-lg font-medium transition-colors">
                 <ArrowRight size={14}/> Convertir en facture
