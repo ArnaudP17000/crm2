@@ -1,0 +1,28 @@
+services:
+  crm-backend:
+    build: ./backend
+    container_name: crm-backend
+    env_file: ./backend/.env
+    volumes:
+      - crm-data:/data
+    networks:
+      - crm-net
+    restart: unless-stopped
+
+  crm-web:
+    build: ./frontend
+    container_name: crm-web
+    ports:
+      - "3001:80"
+    depends_on:
+      - crm-backend
+    networks:
+      - crm-net
+    restart: unless-stopped
+
+networks:
+  crm-net:
+    driver: bridge
+
+volumes:
+  crm-data:
