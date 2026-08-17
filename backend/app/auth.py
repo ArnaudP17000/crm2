@@ -25,6 +25,10 @@ def create_token(user_id: int) -> str:
     exp = datetime.utcnow() + timedelta(days=EXPIRE_DAYS)
     return jwt.encode({'sub': str(user_id), 'exp': exp}, SECRET_KEY, ALGORITHM)
 
+def create_temp_token(user_id: int) -> str:
+    exp = datetime.utcnow() + timedelta(minutes=5)
+    return jwt.encode({'sub': str(user_id), 'exp': exp, 'totp_pending': True}, SECRET_KEY, ALGORITHM)
+
 def get_current_user(
     creds: HTTPAuthorizationCredentials = Depends(bearer),
     db: Session = Depends(get_db)

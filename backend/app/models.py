@@ -153,4 +153,6 @@ class User(Base):
     password_hash = Column(String(300), nullable=False)
     nom           = Column(String(100))
     role          = Column(String(50), default='admin')
+    totp_secret   = Column(String(64), nullable=True)
+    totp_enabled  = Column(Boolean, default=False)
     created_at    = Column(DateTime, default=datetime.utcnow)

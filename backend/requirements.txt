@@ -9,3 +9,5 @@ mailjet-rest==1.3.4
 reportlab==4.2.5
 factur-x==6.7
 lxml
+pyotp
+qrcode[pil]

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, KanbanSquare, FileText, Receipt, LogOut, Waves } from 'lucide-react'
+import { LayoutDashboard, Users, KanbanSquare, FileText, Receipt, LogOut, Waves, Settings } from 'lucide-react'
 
 const nav = [
   { to: '/',          icon: LayoutDashboard, label: 'Tableau de bord', end: true },
@@ -36,10 +36,18 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <button onClick={logout}
-          className="flex items-center gap-3 px-6 py-4 text-slate-400 hover:text-white text-sm border-t border-slate-700 transition-colors">
-          <LogOut size={16} /> Déconnexion
-        </button>
+        <div className="border-t border-slate-700">
+          <NavLink to="/settings"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-6 py-3 text-sm transition-colors ${isActive ? 'text-white' : 'text-slate-400 hover:text-white'}`
+            }>
+            <Settings size={16} /> Paramètres
+          </NavLink>
+          <button onClick={logout}
+            className="w-full flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-white text-sm transition-colors">
+            <LogOut size={16} /> Déconnexion
+          </button>
+        </div>
       </aside>
 
       {/* Main */}

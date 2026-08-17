@@ -12,6 +12,7 @@ import QuoteDetail from './pages/QuoteDetail'
 import Invoices from './pages/Invoices'
 import InvoiceDetail from './pages/InvoiceDetail'
 import InvoiceEdit from './pages/InvoiceEdit'
+import Settings from './pages/Settings'
 
 function PrivateRoute({ children }) {
   return localStorage.getItem('crm_token') ? children : <Navigate to="/login" />
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="factures" element={<Invoices />} />
           <Route path="factures/:id" element={<InvoiceDetail />} />
           <Route path="factures/:id/edit" element={<InvoiceEdit />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>
